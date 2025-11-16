@@ -1,0 +1,10 @@
+[package]
+name = "prop"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+infra = { path = "../infra" }
+dotenvy = "0.15"
+diesel = { version = "2.2.0", features = ["postgres_backend"]}
+calamine = "0.31.0"
