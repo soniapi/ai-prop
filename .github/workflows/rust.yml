@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Checkout ai-infra
+      run: git clone https://github.com/soniapi/ai-infra ../ai-infra
     - name: Build
       run: cargo build --verbose
     - name: Run tests
