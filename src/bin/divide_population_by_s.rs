@@ -1,4 +1,4 @@
-use infra::{establish_connection, fill_partitions};
+use ai-infra::{establish_connection, fill_partitions};
 
 fn main() {
     let connection = &mut establish_connection();
