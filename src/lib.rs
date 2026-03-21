@@ -62,6 +62,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_calculate_proportions_division_by_zero() {
+        let (p_pop, p1, p2) = calculate_proportions(&10.0, &5.0, &5.0, &0.0, &0.0, &0.0);
+
+        assert!(p_pop.is_infinite());
+        assert!(p_pop.is_sign_positive());
+
+        assert!(p1.is_infinite());
+        assert!(p1.is_sign_positive());
+
+        assert!(p2.is_infinite());
+        assert!(p2.is_sign_positive());
+    }
     fn test_calculate_z_statistics_happy_path() {
         let n1 = 100.0;
         let n2 = 100.0;
