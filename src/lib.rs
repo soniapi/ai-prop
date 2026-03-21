@@ -56,3 +56,22 @@ pub fn calculate_z_statistics (n1: &f32, n2: &f32, p1: &f32, p2: &f32, pooled_es
     println!("Z statistics: {:?}", z);
     z
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_proportions_division_by_zero() {
+        let (p_pop, p1, p2) = calculate_proportions(&10.0, &5.0, &5.0, &0.0, &0.0, &0.0);
+
+        assert!(p_pop.is_infinite());
+        assert!(p_pop.is_sign_positive());
+
+        assert!(p1.is_infinite());
+        assert!(p1.is_sign_positive());
+
+        assert!(p2.is_infinite());
+        assert!(p2.is_sign_positive());
+    }
+}
