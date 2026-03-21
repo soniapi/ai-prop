@@ -2,7 +2,7 @@ use diesel::{PgConnection, sql_query, RunQueryDsl};
 
 pub fn divider(
   connection: &mut PgConnection,
-  divider_value: &f32, 
+  divider_value: f32,
 ) {
     let partitioned_table = "objects_s";
     let below = "_below_";
@@ -34,7 +34,7 @@ pub fn divider(
 
 
 pub fn calculate_proportions (
-    m: &f32, m1: &f32, m2: &f32, n: &f32, n1: &f32, n2: &f32,
+    m: f32, m1: f32, m2: f32, n: f32, n1: f32, n2: f32,
 ) -> (f32, f32, f32) {
     println!("Numbers m {:?}, m1: {:?}, m2: {:?}, n: {:?}, n1: {:?}, n2: {:?}", m, m1, m2, n, n1, n2);
     let p1: f32 = m1 / n1;
@@ -44,13 +44,13 @@ pub fn calculate_proportions (
     (p_population, p1, p2)
 }
 
-pub fn calculate_pooled_estimate (n1: &f32, n2: &f32, p1: &f32, p2: &f32) -> f32 {
+pub fn calculate_pooled_estimate (n1: f32, n2: f32, p1: f32, p2: f32) -> f32 {
     let p = ((n1 * p1) + (n2 * p2)) / (n1 + n2);
     println!("Pooled estimate: {:?}", p);
     p
 }
 
-pub fn calculate_z_statistics (n1: &f32, n2: &f32, p1: &f32, p2: &f32, pooled_estimate: &f32) -> f32 {
+pub fn calculate_z_statistics (n1: f32, n2: f32, p1: f32, p2: f32, pooled_estimate: f32) -> f32 {
     let to_be_sqrt = (pooled_estimate * (1.0 - pooled_estimate))*((1.0 / n1) +( 1.0 / n2));
     let z = (p1 - p2) / (to_be_sqrt as f32).sqrt();
     println!("Z statistics: {:?}", z);
