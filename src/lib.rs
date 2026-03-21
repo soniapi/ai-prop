@@ -7,8 +7,8 @@ pub fn divider(
     let partitioned_table = "objects_s";
     let below = "_below_";
     let above = "_above_";
-    let partition_name_below = format!("{}{}{}", partitioned_table, below, divider_value.to_string());
-    let partition_name_above = format!("{}{}{}", partitioned_table, above, divider_value.to_string());
+    let partition_name_below = format!("{}{}{}", partitioned_table, below, divider_value);
+    let partition_name_above = format!("{}{}{}", partitioned_table, above, divider_value);
 
     println!("Partition names: {:?} and {:?}", partition_name_below, partition_name_above);
 
