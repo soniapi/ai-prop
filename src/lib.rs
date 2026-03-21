@@ -52,7 +52,7 @@ pub fn calculate_pooled_estimate (n1: f32, n2: f32, p1: f32, p2: f32) -> f32 {
 
 pub fn calculate_z_statistics (n1: f32, n2: f32, p1: f32, p2: f32, pooled_estimate: f32) -> f32 {
     let to_be_sqrt = (pooled_estimate * (1.0 - pooled_estimate))*((1.0 / n1) +( 1.0 / n2));
-    let z = (p1 - p2) / (to_be_sqrt as f32).sqrt();
+    let z = (p1 - p2) / to_be_sqrt.sqrt();
     println!("Z statistics: {:?}", z);
     z
 }
