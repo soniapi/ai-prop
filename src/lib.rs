@@ -56,3 +56,58 @@ pub fn calculate_z_statistics (n1: &f32, n2: &f32, p1: &f32, p2: &f32, pooled_es
     println!("Z statistics: {:?}", z);
     z
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_proportions() {
+        let m = 100.0;
+        let m1 = 40.0;
+        let m2 = 60.0;
+        let n = 200.0;
+        let n1 = 100.0;
+        let n2 = 100.0;
+
+        let (p_pop, p1, p2) = calculate_proportions(&m, &m1, &m2, &n, &n1, &n2);
+        assert_eq!(p_pop, 0.5);
+        assert_eq!(p1, 0.4);
+        assert_eq!(p2, 0.6);
+    }
+
+    #[test]
+    fn test_calculate_pooled_estimate() {
+        let n1 = 100.0;
+        let n2 = 100.0;
+        let p1 = 0.4;
+        let p2 = 0.6;
+
+        let pooled = calculate_pooled_estimate(&n1, &n2, &p1, &p2);
+        assert_eq!(pooled, 0.5);
+    }
+
+    #[test]
+    fn test_calculate_z_statistics() {
+        let n1 = 100.0;
+        let n2 = 100.0;
+        let p1 = 0.4;
+        let p2 = 0.6;
+        let pooled = 0.5;
+
+        let z = calculate_z_statistics(&n1, &n2, &p1, &p2, &pooled);
+        assert!((z - (-2.828427)).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_calculate_z_statistics_zero_diff() {
+        let n1 = 50.0;
+        let n2 = 50.0;
+        let p1 = 0.5;
+        let p2 = 0.5;
+        let pooled = 0.5;
+
+        let z = calculate_z_statistics(&n1, &n2, &p1, &p2, &pooled);
+        assert_eq!(z, 0.0);
+    }
+}
