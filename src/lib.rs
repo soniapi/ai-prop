@@ -33,25 +33,44 @@ pub fn divider(
 }
 
 
-pub fn calculate_proportions (
-    m: f32, m1: f32, m2: f32, n: f32, n1: f32, n2: f32,
+pub struct PopulationData {
+    pub m: f32,
+    pub n: f32,
+}
+
+pub fn calculate_proportions(
+    overall: PopulationData,
+    group1: PopulationData,
+    group2: PopulationData,
 ) -> (f32, f32, f32) {
-    println!("Numbers m {:?}, m1: {:?}, m2: {:?}, n: {:?}, n1: {:?}, n2: {:?}", m, m1, m2, n, n1, n2);
-    let p1: f32 = m1 / n1;
-    let p2: f32 = m2 / n2;
-    let p_population: f32 = m / n;
-    println!("Proportion for whole population {:?}, population 1 {:?}, population 2 {:?}", p_population, p1, p2);
+    println!(
+        "Numbers m {:?}, m1: {:?}, m2: {:?}, n: {:?}, n1: {:?}, n2: {:?}",
+        overall.m, group1.m, group2.m, overall.n, group1.n, group2.n
+    );
+    let p1: f32 = group1.m / group1.n;
+    let p2: f32 = group2.m / group2.n;
+    let p_population: f32 = overall.m / overall.n;
+    println!(
+        "Proportion for whole population {:?}, population 1 {:?}, population 2 {:?}",
+        p_population, p1, p2
+    );
     (p_population, p1, p2)
 }
 
-pub fn calculate_pooled_estimate (n1: f32, n2: f32, p1: f32, p2: f32) -> f32 {
+pub fn calculate_pooled_estimate(n1: f32, n2: f32, p1: f32, p2: f32) -> f32 {
     let p = ((n1 * p1) + (n2 * p2)) / (n1 + n2);
     println!("Pooled estimate: {:?}", p);
     p
 }
 
-pub fn calculate_z_statistics (n1: f32, n2: f32, p1: f32, p2: f32, pooled_estimate: f32) -> f32 {
-    let to_be_sqrt = (pooled_estimate * (1.0 - pooled_estimate))*((1.0 / n1) +( 1.0 / n2));
+pub fn calculate_z_statistics(
+    n1: f32,
+    n2: f32,
+    p1: f32,
+    p2: f32,
+    pooled_estimate: f32,
+) -> f32 {
+    let to_be_sqrt = (pooled_estimate * (1.0 - pooled_estimate)) * ((1.0 / n1) + (1.0 / n2));
     let z = (p1 - p2) / to_be_sqrt.sqrt();
     println!("Z statistics: {:?}", z);
     z
@@ -63,7 +82,11 @@ mod tests {
 
     #[test]
     fn test_calculate_proportions_division_by_zero() {
-        let (p_pop, p1, p2) = calculate_proportions(10.0, 5.0, 5.0, 0.0, 0.0, 0.0);
+        let (p_pop, p1, p2) = calculate_proportions(
+            PopulationData { m: 10.0, n: 0.0 },
+            PopulationData { m: 5.0, n: 0.0 },
+            PopulationData { m: 5.0, n: 0.0 }
+        );
 
         assert!(p_pop.is_infinite());
         assert!(p_pop.is_sign_positive());
