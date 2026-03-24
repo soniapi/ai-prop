@@ -8,7 +8,7 @@ fn quote_literal(literal: &str) -> String {
     format!("'{}'", literal.replace("'", "''"))
 }
 
-pub fn divider(connection: &mut PgConnection, divider_value: f32) {
+pub(crate) fn divider_sql(divider_value: f32) -> (String, String, String, String) {
     let partitioned_table = "objects_s";
     let below = "_below_";
     let above = "_above_";
@@ -16,28 +16,36 @@ pub fn divider(connection: &mut PgConnection, divider_value: f32) {
     let partition_name_below = format!("{}{}{}", partitioned_table, below, divider_value.to_string());
     let partition_name_above = format!("{}{}{}", partitioned_table, above, divider_value.to_string());
 
-    println!(
-        "Partition names: {:?} and {:?}",
-        partition_name_below, partition_name_above
-    );
-
-    let sql = format!(
+    let sql_below = format!(
         "CREATE TABLE {} PARTITION OF {} FOR VALUES FROM (MINVALUE) TO ({})",
         quote_identifier(&partition_name_below),
         quote_identifier(partitioned_table),
         quote_literal(&divider_value.to_string()),
     );
-    sql_query(sql)
-        .execute(connection)
-        .expect("Partition can't be created");
 
-    let sql = format!(
+    let sql_above = format!(
         "CREATE TABLE {} PARTITION OF {} FOR VALUES FROM ({}) TO (MAXVALUE)",
         quote_identifier(&partition_name_above),
         quote_identifier(partitioned_table),
         quote_literal(&divider_value.to_string()),
     );
-    sql_query(sql)
+
+    (partition_name_below, partition_name_above, sql_below, sql_above)
+}
+
+pub fn divider(connection: &mut PgConnection, divider_value: f32) {
+    let (partition_name_below, partition_name_above, sql_below, sql_above) = divider_sql(divider_value);
+
+    println!(
+        "Partition names: {:?} and {:?}",
+        partition_name_below, partition_name_above
+    );
+
+    sql_query(sql_below)
+        .execute(connection)
+        .expect("Partition can't be created");
+
+    sql_query(sql_above)
         .execute(connection)
         .expect("Partition can't be created");
 }
@@ -152,5 +160,35 @@ mod tests {
         // sqrt(0.0036) = 0.06
         // z = 0.2 / 0.06 = 3.333333...
         assert!((result - 3.333333).abs() < 0.0001);
+    }
+
+    #[test]
+    fn test_quote_identifier() {
+        assert_eq!(quote_identifier("objects_s"), "\"objects_s\"");
+        assert_eq!(quote_identifier("my\"table"), "\"my\"\"table\"");
+    }
+
+    #[test]
+    fn test_quote_literal() {
+        assert_eq!(quote_literal("5.5"), "'5.5'");
+        assert_eq!(quote_literal("O'Reilly"), "'O''Reilly'");
+    }
+
+    #[test]
+    fn test_divider_sql_positive() {
+        let (partition_name_below, partition_name_above, sql_below, sql_above) = divider_sql(5.5);
+        assert_eq!(partition_name_below, "objects_s_below_5.5");
+        assert_eq!(partition_name_above, "objects_s_above_5.5");
+        assert_eq!(sql_below, "CREATE TABLE \"objects_s_below_5.5\" PARTITION OF \"objects_s\" FOR VALUES FROM (MINVALUE) TO ('5.5')");
+        assert_eq!(sql_above, "CREATE TABLE \"objects_s_above_5.5\" PARTITION OF \"objects_s\" FOR VALUES FROM ('5.5') TO (MAXVALUE)");
+    }
+
+    #[test]
+    fn test_divider_sql_negative() {
+        let (partition_name_below, partition_name_above, sql_below, sql_above) = divider_sql(-2.3);
+        assert_eq!(partition_name_below, "objects_s_below_-2.3");
+        assert_eq!(partition_name_above, "objects_s_above_-2.3");
+        assert_eq!(sql_below, "CREATE TABLE \"objects_s_below_-2.3\" PARTITION OF \"objects_s\" FOR VALUES FROM (MINVALUE) TO ('-2.3')");
+        assert_eq!(sql_above, "CREATE TABLE \"objects_s_above_-2.3\" PARTITION OF \"objects_s\" FOR VALUES FROM ('-2.3') TO (MAXVALUE)");
     }
 }
