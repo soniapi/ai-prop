@@ -1,37 +1,46 @@
-use diesel::{PgConnection, sql_query, RunQueryDsl};
+use diesel::{sql_query, PgConnection, RunQueryDsl};
 
-pub fn divider(
-  connection: &mut PgConnection,
-  divider_value: f32,
-) {
+fn quote_identifier(ident: &str) -> String {
+    format!("\"{}\"", ident.replace("\"", "\"\""))
+}
+
+fn quote_literal(literal: &str) -> String {
+    format!("'{}'", literal.replace("'", "''"))
+}
+
+pub fn divider(connection: &mut PgConnection, divider_value: f32) {
     let partitioned_table = "objects_s";
     let below = "_below_";
     let above = "_above_";
+
     let partition_name_below = format!("{}{}{}", partitioned_table, below, divider_value.to_string());
     let partition_name_above = format!("{}{}{}", partitioned_table, above, divider_value.to_string());
 
-    println!("Partition names: {:?} and {:?}", partition_name_below, partition_name_above);
+    println!(
+        "Partition names: {:?} and {:?}",
+        partition_name_below, partition_name_above
+    );
 
     let sql = format!(
-          "CREATE TABLE {} PARTITION OF objects_s FOR VALUES FROM (MINVALUE) TO ('{}')",
-        partition_name_below,
-        divider_value,
+        "CREATE TABLE {} PARTITION OF {} FOR VALUES FROM (MINVALUE) TO ({})",
+        quote_identifier(&partition_name_below),
+        quote_identifier(partitioned_table),
+        quote_literal(&divider_value.to_string()),
     );
     sql_query(sql)
         .execute(connection)
         .expect("Partition can't be created");
 
     let sql = format!(
-          "CREATE TABLE {} PARTITION OF objects_s FOR VALUES FROM ('{}') TO (MAXVALUE)",
-        partition_name_above,
-        divider_value,
+        "CREATE TABLE {} PARTITION OF {} FOR VALUES FROM ({}) TO (MAXVALUE)",
+        quote_identifier(&partition_name_above),
+        quote_identifier(partitioned_table),
+        quote_literal(&divider_value.to_string()),
     );
     sql_query(sql)
         .execute(connection)
         .expect("Partition can't be created");
-    
 }
-
 
 pub struct PopulationData {
     pub m: f32,
@@ -63,13 +72,7 @@ pub fn calculate_pooled_estimate(n1: f32, n2: f32, p1: f32, p2: f32) -> f32 {
     p
 }
 
-pub fn calculate_z_statistics(
-    n1: f32,
-    n2: f32,
-    p1: f32,
-    p2: f32,
-    pooled_estimate: f32,
-) -> f32 {
+pub fn calculate_z_statistics(n1: f32, n2: f32, p1: f32, p2: f32, pooled_estimate: f32) -> f32 {
     let to_be_sqrt = (pooled_estimate * (1.0 - pooled_estimate)) * ((1.0 / n1) + (1.0 / n2));
     let z = (p1 - p2) / to_be_sqrt.sqrt();
     println!("Z statistics: {:?}", z);
@@ -85,7 +88,7 @@ mod tests {
         let (p_pop, p1, p2) = calculate_proportions(
             PopulationData { m: 10.0, n: 0.0 },
             PopulationData { m: 5.0, n: 0.0 },
-            PopulationData { m: 5.0, n: 0.0 }
+            PopulationData { m: 5.0, n: 0.0 },
         );
 
         assert!(p_pop.is_infinite());
@@ -150,5 +153,4 @@ mod tests {
         // z = 0.2 / 0.06 = 3.333333...
         assert!((result - 3.333333).abs() < 0.0001);
     }
-
 }
