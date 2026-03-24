@@ -33,6 +33,35 @@ pub(crate) fn divider_sql(divider_value: f32) -> (String, String, String, String
     (partition_name_below, partition_name_above, sql_below, sql_above)
 }
 
+fn check_table_exists(conn: &mut PgConnection, table_name: &str) -> bool {
+    #[derive(diesel::query_builder::QueryId, diesel::QueryableByName)]
+    struct ExistsResult {
+        #[diesel(sql_type = diesel::sql_types::Bool)]
+        exists: bool,
+    }
+
+    let query = sql_query(
+        "SELECT EXISTS (
+            SELECT FROM pg_tables
+            WHERE schemaname = 'public'
+            AND tablename = $1
+        ) as exists"
+    )
+    .bind::<diesel::sql_types::Text, _>(table_name);
+
+    if let Ok(mut results) = query.load::<ExistsResult>(conn) {
+        if let Some(res) = results.pop() {
+            return res.exists;
+        }
+    }
+    false
+}
+
+fn check_table_health(conn: &mut PgConnection, table_name: &str) -> bool {
+    let sql = format!("SELECT 1 FROM {} LIMIT 1", quote_identifier(table_name));
+    sql_query(sql).execute(conn).is_ok()
+}
+
 pub fn divider(connection: &mut PgConnection, divider_value: f32) {
     let (partition_name_below, partition_name_above, sql_below, sql_above) = divider_sql(divider_value);
 
@@ -40,6 +69,22 @@ pub fn divider(connection: &mut PgConnection, divider_value: f32) {
         "Partition names: {:?} and {:?}",
         partition_name_below, partition_name_above
     );
+
+    let exists_below = check_table_exists(connection, &partition_name_below);
+    let exists_above = check_table_exists(connection, &partition_name_above);
+
+    if exists_below && exists_above {
+        let healthy_below = check_table_health(connection, &partition_name_below);
+        let healthy_above = check_table_health(connection, &partition_name_above);
+
+        if healthy_below && healthy_above {
+            println!(
+                "Partitions {:?} and {:?} already exist and are healthy. Skipping creation.",
+                partition_name_below, partition_name_above
+            );
+            return;
+        }
+    }
 
     sql_query(sql_below)
         .execute(connection)
