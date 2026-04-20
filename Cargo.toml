@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ai_infra = { path = "../ai-infra" }
+ai_infra = { git = "https://github.com/soniapi/ai-infra" }
 dotenvy = "0.15"
 diesel = { version = "2.2.0", features = ["postgres_backend"]}
 calamine = "0.31.0"
