@@ -18,6 +18,19 @@ jobs:
     - uses: actions/checkout@v4
     - name: Checkout ai-infra
       run: git clone https://github.com/soniapi/ai-infra ../ai-infra
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y protobuf-compiler libpq-dev postgresql
+    - name: Configure Postgres
+      run: |
+        sudo systemctl start postgresql
+        sudo -u postgres psql -c "CREATE USER jules WITH PASSWORD 'pwd';"
+        sudo -u postgres psql -c "CREATE DATABASE \"name-postgres\";"
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE \"name-postgres\" TO jules;"
+        sudo -u postgres psql -d name-postgres -c "GRANT ALL ON SCHEMA public TO jules;"
+        # we might need to set the database URL as an environment variable
+        echo "DATABASE_URL=postgres://jules:pwd@localhost:5432/name-postgres" >> $GITHUB_ENV
+        cd ../ai-infra
+        echo "DATABASE_URL=postgres://jules:pwd@localhost:5432/name-postgres" > .env
     - name: Build
       run: cargo build --verbose
     - name: Run tests
