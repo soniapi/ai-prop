@@ -146,7 +146,7 @@ async fn rest_calculate_z_statistics(
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start gRPC server in a separate task
-    let grpc_addr = "0.0.0.0:50051".parse()?;
+    let grpc_addr = "[::1]:50051".parse()?;
     let ai_prop_service = MyAiPropService::default();
 
     println!("Starting gRPC server on {}", grpc_addr);
@@ -160,10 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/calculate_pooled_estimate", post(rest_calculate_pooled_estimate))
         .route("/calculate_z_statistics", post(rest_calculate_z_statistics));
 
-    let port = std::env::var("PORT")
-        .unwrap_or_else(|_| "3000".to_string())
-        .parse::<u16>()?;
-    let rest_addr = SocketAddr::from(([0, 0, 0, 0], port));
+    let rest_addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Starting REST server on {}", rest_addr);
     let listener = TcpListener::bind(rest_addr).await?;
     let rest_future = axum::serve(listener, app);

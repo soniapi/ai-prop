@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ai-prop-server
+    env: docker
+    region: ohio
+    plan: free
+    healthCheckPath: /
