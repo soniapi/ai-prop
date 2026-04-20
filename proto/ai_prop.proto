@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package ai_prop;
+
+message PopulationData {
+  float m = 1;
+  float n = 2;
+}
+
+message CalculateProportionsRequest {
+  PopulationData overall = 1;
+  PopulationData group1 = 2;
+  PopulationData group2 = 3;
+}
+
+message CalculateProportionsResponse {
+  float p_population = 1;
+  float p1 = 2;
+  float p2 = 3;
+}
+
+message CalculatePooledEstimateRequest {
+  float n1 = 1;
+  float n2 = 2;
+  float p1 = 3;
+  float p2 = 4;
+}
+
+message CalculatePooledEstimateResponse {
+  float p = 1;
+}
+
+message CalculateZStatisticsRequest {
+  float n1 = 1;
+  float n2 = 2;
+  float p1 = 3;
+  float p2 = 4;
+  float pooled_estimate = 5;
+}
+
+message CalculateZStatisticsResponse {
+  float z = 1;
+}
+
+service AiPropService {
+  rpc CalculateProportions(CalculateProportionsRequest) returns (CalculateProportionsResponse);
+  rpc CalculatePooledEstimate(CalculatePooledEstimateRequest) returns (CalculatePooledEstimateResponse);
+  rpc CalculateZStatistics(CalculateZStatisticsRequest) returns (CalculateZStatisticsResponse);
+}
