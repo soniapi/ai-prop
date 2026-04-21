@@ -1,7 +1,7 @@
-use std::process::{Command, Child};
+use serde_json::{Value, json};
+use std::process::{Child, Command};
 use std::time::Duration;
 use tokio::time::sleep;
-use serde_json::{json, Value};
 
 struct ServerGuard {
     child: Child,
@@ -30,7 +30,8 @@ async fn test_rest_api_proportions() {
     let client = reqwest::Client::new();
 
     // test calculate_proportions
-    let res = client.post("http://127.0.0.1:3000/calculate_proportions")
+    let res = client
+        .post("http://127.0.0.1:3000/calculate_proportions")
         .json(&json!({
             "overall": { "m": 100.0, "n": 200.0 },
             "group1": { "m": 40.0, "n": 100.0 },
@@ -48,7 +49,8 @@ async fn test_rest_api_proportions() {
     assert_eq!(body["p2"].as_f64().unwrap(), 0.6);
 
     // test calculate_pooled_estimate
-    let res = client.post("http://127.0.0.1:3000/calculate_pooled_estimate")
+    let res = client
+        .post("http://127.0.0.1:3000/calculate_pooled_estimate")
         .json(&json!({
             "n1": 100.0,
             "n2": 100.0,
@@ -64,7 +66,8 @@ async fn test_rest_api_proportions() {
     assert_eq!(body["p"].as_f64().unwrap(), 0.5);
 
     // test calculate_z_statistics
-    let res = client.post("http://127.0.0.1:3000/calculate_z_statistics")
+    let res = client
+        .post("http://127.0.0.1:3000/calculate_z_statistics")
         .json(&json!({
             "n1": 100.0,
             "n2": 100.0,
