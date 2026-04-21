@@ -17,6 +17,20 @@ The service exposes the following endpoints (available on both REST and gRPC):
 The REST API is currently deployed on Render and is accessible at:
 [https://ai-prop-service.onrender.com](https://ai-prop-service.onrender.com)
 
+### Example Usage (REST)
+
+```bash
+curl -s -X POST https://ai-prop-service.onrender.com/calculate_proportions \
+-H "Content-Type: application/json" \
+-d '{"overall": {"m": 10.0, "n": 20.0}, "group1": {"m": 5.0, "n": 10.0}, "group2": {"m": 5.0, "n": 10.0}}'
+```
+
+**Response:**
+```json
+{"p_population":0.5,"p1":0.5,"p2":0.5}
+```
+
+
 ## Binaries
 
 This project contains two primary binaries:
