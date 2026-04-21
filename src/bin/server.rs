@@ -1,13 +1,11 @@
-use ai_prop::{calculate_proportions, calculate_pooled_estimate, calculate_z_statistics, PopulationData};
-use axum::{
-    extract::Json,
-    routing::post,
-    Router,
+use ai_prop::{
+    PopulationData, calculate_pooled_estimate, calculate_proportions, calculate_z_statistics,
 };
+use axum::{Router, extract::Json, routing::post};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status, transport::Server};
 
 pub mod ai_prop_grpc {
     tonic::include_proto!("ai_prop");
@@ -31,13 +29,28 @@ impl AiPropService for MyAiPropService {
     ) -> Result<Response<CalculateProportionsResponse>, Status> {
         let req = request.into_inner();
 
-        let overall_req = req.overall.ok_or_else(|| Status::invalid_argument("overall missing"))?;
-        let group1_req = req.group1.ok_or_else(|| Status::invalid_argument("group1 missing"))?;
-        let group2_req = req.group2.ok_or_else(|| Status::invalid_argument("group2 missing"))?;
+        let overall_req = req
+            .overall
+            .ok_or_else(|| Status::invalid_argument("overall missing"))?;
+        let group1_req = req
+            .group1
+            .ok_or_else(|| Status::invalid_argument("group1 missing"))?;
+        let group2_req = req
+            .group2
+            .ok_or_else(|| Status::invalid_argument("group2 missing"))?;
 
-        let overall = PopulationData { m: overall_req.m, n: overall_req.n };
-        let group1 = PopulationData { m: group1_req.m, n: group1_req.n };
-        let group2 = PopulationData { m: group2_req.m, n: group2_req.n };
+        let overall = PopulationData {
+            m: overall_req.m,
+            n: overall_req.n,
+        };
+        let group1 = PopulationData {
+            m: group1_req.m,
+            n: group1_req.n,
+        };
+        let group2 = PopulationData {
+            m: group2_req.m,
+            n: group2_req.n,
+        };
 
         let (p_population, p1, p2) = calculate_proportions(overall, group1, group2);
 
@@ -119,13 +132,26 @@ struct RestCalculateZStatisticsResponse {
 async fn rest_calculate_proportions(
     Json(payload): Json<RestCalculateProportionsRequest>,
 ) -> Json<RestCalculateProportionsResponse> {
-    let overall = PopulationData { m: payload.overall.m, n: payload.overall.n };
-    let group1 = PopulationData { m: payload.group1.m, n: payload.group1.n };
-    let group2 = PopulationData { m: payload.group2.m, n: payload.group2.n };
+    let overall = PopulationData {
+        m: payload.overall.m,
+        n: payload.overall.n,
+    };
+    let group1 = PopulationData {
+        m: payload.group1.m,
+        n: payload.group1.n,
+    };
+    let group2 = PopulationData {
+        m: payload.group2.m,
+        n: payload.group2.n,
+    };
 
     let (p_population, p1, p2) = calculate_proportions(overall, group1, group2);
 
-    Json(RestCalculateProportionsResponse { p_population, p1, p2 })
+    Json(RestCalculateProportionsResponse {
+        p_population,
+        p1,
+        p2,
+    })
 }
 
 async fn rest_calculate_pooled_estimate(
@@ -138,10 +164,15 @@ async fn rest_calculate_pooled_estimate(
 async fn rest_calculate_z_statistics(
     Json(payload): Json<RestCalculateZStatisticsRequest>,
 ) -> Json<RestCalculateZStatisticsResponse> {
-    let z = calculate_z_statistics(payload.n1, payload.n2, payload.p1, payload.p2, payload.pooled_estimate);
+    let z = calculate_z_statistics(
+        payload.n1,
+        payload.n2,
+        payload.p1,
+        payload.p2,
+        payload.pooled_estimate,
+    );
     Json(RestCalculateZStatisticsResponse { z })
 }
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -157,7 +188,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start REST server
     let app = Router::new()
         .route("/calculate_proportions", post(rest_calculate_proportions))
-        .route("/calculate_pooled_estimate", post(rest_calculate_pooled_estimate))
+        .route(
+            "/calculate_pooled_estimate",
+            post(rest_calculate_pooled_estimate),
+        )
         .route("/calculate_z_statistics", post(rest_calculate_z_statistics));
 
     let port = std::env::var("PORT")
@@ -170,8 +204,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Wait for both to finish (which they shouldn't unless interrupted)
     tokio::try_join!(
-        async { grpc_future.await.map_err(|e| Box::new(e) as Box<dyn std::error::Error>) },
-        async { rest_future.await.map_err(|e| Box::new(e) as Box<dyn std::error::Error>) }
+        async {
+            grpc_future
+                .await
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+        },
+        async {
+            rest_future
+                .await
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+        }
     )?;
 
     Ok(())
