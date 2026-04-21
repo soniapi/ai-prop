@@ -2,9 +2,10 @@
 name = "ai_prop"
 version = "0.1.0"
 edition = "2024"
+default-run = "server"
 
 [dependencies]
-ai_infra = { path = "../ai-infra" }
+ai_infra = { git = "https://github.com/soniapi/ai-infra" }
 dotenvy = "0.15"
 diesel = { version = "2.2.0", features = ["postgres_backend"]}
 calamine = "0.31.0"
@@ -16,6 +17,7 @@ tonic = "0.12"
 prost = "0.13"
 
 [build-dependencies]
+protobuf-src = "2.1.1"
 tonic-build = "0.12"
 
 [dev-dependencies]

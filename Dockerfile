@@ -11,9 +11,6 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# The project depends on `../ai-infra`, so we need to set that up
-# in the Docker context. We clone the public repo here.
-RUN git clone https://github.com/soniapi/ai-infra /ai-infra
 
 # Copy the ai_prop source code
 COPY . /app
